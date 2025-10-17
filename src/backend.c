@@ -643,7 +643,7 @@ int assign_server(struct stream *s)
 
 	srv = NULL;
 	s->target = NULL;
-
+	printf("LOG: assign server()\n");
 	if ((s->be->lbprm.algo & BE_LB_KIND) != BE_LB_KIND_HI &&
 	    ((s->sess->flags & SESS_FL_PREFER_LAST) ||
 	     (s->be->options & PR_O_PREF_LAST))) {
@@ -671,9 +671,10 @@ int assign_server(struct stream *s)
 			}
 		}
 	}
-
+	//알고리즘 분기 전에 공통적으로 체크하는 사항
 	if (s->be->lbprm.algo & BE_LB_KIND) {
 		/* we must check if we have at least one server available */
+		//활성 서버 가중치 합이 0이면 NOSRV.
 		if (!s->be->lbprm.tot_weight) {
 			err = SRV_STATUS_NOSRV;
 			goto out;
@@ -696,6 +697,7 @@ int assign_server(struct stream *s)
 		 */
 		switch (s->be->lbprm.algo & BE_LB_LKUP) {
 		case BE_LB_LKUP_RRTREE:
+			printf("LOG: fwrr_get_next_server()\n");
 			srv = fwrr_get_next_server(s->be, prev_srv);
 			break;
 
@@ -709,6 +711,7 @@ int assign_server(struct stream *s)
 
 		case BE_LB_LKUP_CHTREE:
 		case BE_LB_LKUP_MAP:
+			printf("LOG: BE_LB_LKUP_MAP()\n");
 			if ((s->be->lbprm.algo & BE_LB_KIND) == BE_LB_KIND_RR) {
 				/* static-rr (map) or random (chash) */
 				if ((s->be->lbprm.algo & BE_LB_PARM) == BE_LB_RR_RANDOM)
@@ -807,15 +810,17 @@ int assign_server(struct stream *s)
 			break;
 
 		default:
-			if ((s->be->lbprm.algo & BE_LB_KIND) == BE_LB_KIND_SA) {
+			if ((s->be->lbprm.algo & BE_LB_KIND) == BE_LB_KIND_QOS) {
 				/* some special algos that cannot be grouped together */
-
-				if ((s->be->lbprm.algo & BE_LB_PARM) == BE_LB_SA_SS)
+				printf("LOG: QoS mode\n");
+				if ((s->be->lbprm.algo & BE_LB_PARM) == BE_LB_SA_QOS)
 					srv = ss_get_server(s->be);
-
+					//srv = fwrr_get_next_server(s->be, prev_srv);
 				break;
-			}
+			} 
+
 			/* unknown balancing algorithm */
+			printf("Unknown algorithm\n");
 			err = SRV_STATUS_INTERNAL;
 			goto out;
 		}
@@ -841,10 +846,11 @@ int assign_server(struct stream *s)
 	}
 
 out_ok:
+	printf("out_ok\n");
 	s->flags |= SF_ASSIGNED;
 	err = SRV_STATUS_OK;
  out:
-
+	printf("out\n");
 	/* Either we take back our connection slot, or we offer it to someone
 	 * else if we don't need it anymore.
 	 */
@@ -859,6 +865,7 @@ out_ok:
 
  out_err:
 	return err;
+printf("normal return\n");
 }
 
 /* Allocate <*ss> address unless already set. Address is then set to the
@@ -2934,6 +2941,7 @@ void back_handle_st_rdy(struct stream *s)
 
   end:
 	DBG_TRACE_LEAVE(STRM_EV_STRM_PROC|STRM_EV_CS_ST, s);
+	
 }
 
 /* sends a log message when a backend goes down, and also sets last
@@ -3063,6 +3071,7 @@ const char *backend_lb_algo_str(int algo) {
  */
 int backend_parse_balance(const char **args, char **err, struct proxy *curproxy)
 {
+	printf("LOG: backend_parse_balance()\n");
 	if (!*(args[0])) {
 		/* if no option is set, use random by default */
 		curproxy->lbprm.algo &= ~BE_LB_ALGO;
@@ -3073,6 +3082,11 @@ int backend_parse_balance(const char **args, char **err, struct proxy *curproxy)
 	if (strcmp(args[0], "roundrobin") == 0) {
 		curproxy->lbprm.algo &= ~BE_LB_ALGO;
 		curproxy->lbprm.algo |= BE_LB_ALGO_RR;
+	}
+	/*custom algorithm*/
+	else if (strcmp(args[0], "qos") == 0) {
+		curproxy->lbprm.algo &= ~BE_LB_ALGO;
+		curproxy->lbprm.algo |= BE_LB_ALGO_QOS;
 	}
 	else if (strcmp(args[0], "static-rr") == 0) {
 		curproxy->lbprm.algo &= ~BE_LB_ALGO;
@@ -3261,10 +3275,10 @@ int backend_parse_balance(const char **args, char **err, struct proxy *curproxy)
 		ha_free(&curproxy->lbprm.arg_str);
 		curproxy->lbprm.arg_str = strdup(args[1]);
 	}
-	else if (strcmp(args[0], "sticky") == 0) {
-		curproxy->lbprm.algo &= ~BE_LB_ALGO;
-		curproxy->lbprm.algo |= BE_LB_ALGO_SS;
-	}
+	// else if (strcmp(args[0], "sticky") == 0) {
+	// 	curproxy->lbprm.algo &= ~BE_LB_ALGO;
+	// 	curproxy->lbprm.algo |= BE_LB_ALGO_SS;
+	// }
 	else {
 		memprintf(err, "only supports 'roundrobin', 'static-rr', 'leastconn', 'source', 'uri', 'url_param', 'hash', 'hdr(name)', 'rdp-cookie(name)', 'log-hash' and 'sticky' options.");
 		return -1;

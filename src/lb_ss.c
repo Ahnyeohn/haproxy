@@ -116,6 +116,7 @@ static void ss_set_server_status_up(struct server *srv)
  */
 void recalc_server_ss(struct proxy *px)
 {
+	printf("LOG: recalc_server_ss()\n");
 	struct server *cur, *first;
 	int flag;
 
@@ -145,6 +146,7 @@ void recalc_server_ss(struct proxy *px)
  */
 void init_server_ss(struct proxy *p)
 {
+	printf("LOG: init_server_ss()\n");
 	struct server *srv;
 
 	p->lbprm.set_server_status_up   = ss_set_server_status_up;

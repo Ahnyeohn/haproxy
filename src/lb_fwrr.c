@@ -365,6 +365,7 @@ void fwrr_init_server_groups(struct proxy *p)
  */
 static inline void fwrr_dequeue_srv(struct server *s, int tgid)
 {
+	printf("LOG: fwrr_dequeue_srv()\n");
 	eb32_delete(&s->per_tgrp[tgid - 1].lb_node);
 }
 
@@ -376,6 +377,7 @@ static inline void fwrr_dequeue_srv(struct server *s, int tgid)
  */
 static void fwrr_queue_srv(struct server *s, int tgid)
 {
+	printf("LOG: fwrr_queue_srv()\n");
 	struct proxy *p = s->proxy;
 	struct fwrr_group *grp;
 	int next_weight;
@@ -535,6 +537,7 @@ static struct server *fwrr_get_server_from_group(struct fwrr_group *grp)
  */
 static inline void fwrr_update_position(struct fwrr_group *grp, struct server *s, int next_weight)
 {
+	printf("LOG: fwrr_update_position()\n");
 	unsigned int eweight = *(volatile unsigned int *)&s->cur_eweight;
 
 	if (!eweight)

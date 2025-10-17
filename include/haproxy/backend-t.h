@@ -61,6 +61,7 @@
 
 /* BE_LB_SA_* is used with BE_LB_KIND_SA */
 #define BE_LB_SA_SS     0x00000000  /* stick to server as long as it is available */
+#define BE_LB_SA_QOS    0x00000000  /*  */
 
 #define BE_LB_PARM      0x000000FF  /* mask to get/clear the LB param */
 
@@ -78,6 +79,7 @@
 #define BE_LB_KIND_CB   0x00020000  /* connection-based */
 #define BE_LB_KIND_HI   0x00030000  /* hash of input (see hash inputs above) */
 #define BE_LB_KIND_SA   0x00040000  /* standalone (specific algorithms, cannot be grouped) */
+#define BE_LB_KIND_QOS  0x00040000
 #define BE_LB_KIND      0x00070000  /* mask to get/clear LB algorithm */
 
 /* All known variants of load balancing algorithms. These can be cleared using
@@ -98,6 +100,7 @@
 #define BE_LB_ALGO_SMP	(BE_LB_KIND_HI | BE_LB_NEED_DATA | BE_LB_HASH_SMP) /* hash: sample expression  */
 #define BE_LB_ALGO_LH	(BE_LB_KIND_HI | BE_LB_NEED_LOG  | BE_LB_HASH_SMP) /* log hash: sample expression  */
 #define BE_LB_ALGO      (BE_LB_KIND    | BE_LB_NEED      | BE_LB_PARM    ) /* mask to clear algo */
+#define BE_LB_ALGO_QOS  (BE_LB_KIND_QOS | BE_LB_NEED_NONE) /* QOS를 위한 커스텀 알고리즘 */
 
 /* Higher bits define how a given criterion is mapped to a server. In fact it
  * designates the LB function by itself. The dynamic algorithms will also have

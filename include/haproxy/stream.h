@@ -434,7 +434,8 @@ static inline void stream_report_term_evt(struct stconn *sc, enum strm_term_even
 }
 
 static inline void stream_set_srv_target(struct stream *s, struct server *srv)
-{
+{	
+	printf("LOG: stream_set_srv_target()");
 	s->target = &srv->obj_type;
 	s->sv_tgcounters = srv->counters.shared.tg[tgid - 1];
 }
